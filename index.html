@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mac Shop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ff6e6e;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    .hidden {
+      display: none;
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .produto, .carrinho-item {
+      background: #ffe7e7;
+      border: 1px solid #000000;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    button {
+      background: #db0101;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #6b0000;
+    }
+    .remover {
+      background: #ffffff;
+      margin-top: 5px;
+    }
+    .logout {
+      background: #555;
+      margin-top: 20px;
+    }
+    .switch {
+      background: transparent;
+      color: #ffffff;
+      border: none;
+      text-align: left;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .tamanho {
+        height: 70px;
+        border-radius: 100%;
+    }
+
+    span {
+        color: #db0101;
+    }
+  </style>
+</head>
+<body>
+
+    <img class="tamanho" src="img/B.png">
+
+  <!-- Tela de Login -->
+  <div class="container" id="loginTela">
+    <h2>Login</h2>
+    <input type="text" id="loginUsuario" placeholder="Usuário">
+    <input type="password" id="loginSenha" placeholder="Senha">
+    <button onclick="fazerLogin()">Entrar</button>
+    <button class="switch" onclick="mostrarCadastro()">Não tem conta? Cadastre-se</button>
+  </div>
+
+  <!-- Tela de Cadastro -->
+  <div class="container hidden" id="cadastroTela">
+    <h2>Cadastro</h2>
+    <input type="text" id="cadastroUsuario" placeholder="Novo usuário">
+    <input type="password" id="cadastroSenha" placeholder="Nova senha">
+    <button onclick="fazerCadastro()">Cadastrar</button>
+    <button class="switch" onclick="mostrarLogin()">Já tem conta? Faça login</button>
+  </div>
+
+  <!-- Tela da Loja -->
+  <div class="container hidden" id="lojaTela">
+    <h1>Bem-vindo à Loja <span>Mac Shop</span></h1>
+    <div id="lista-produtos"></div>
+
+    <div id="carrinho">
+      <h2>Carrinho</h2>
+      <div id="itens-carrinho"></div>
+      <p><strong>Total:</strong> R$ <span id="total">0.00</span></p>
+      <button onclick="finalizarCompra()">Finalizar Compra</button>
+      <button class="logout" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <script>
+    const produtosDefault = [
+      { id: 1, nome: 'Camisa', preco: 49.90, estoque: 5 },
+      { id: 2, nome: 'Calça Jeans', preco: 89.90, estoque: 3 },
+      { id: 3, nome: 'Tênis', preco: 129.90, estoque: 2 },
+    ];
+
+    let produtos = JSON.parse(localStorage.getItem('produtos')) || produtosDefault;
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+    // Funções de cadastro e login
+    function getUsuarios() {
+      return JSON.parse(localStorage.getItem('usuarios')) || [];
+    }
+
+    function salvarUsuarios(usuarios) {
+      localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    }
+
+    function fazerCadastro() {
+      const usuario = document.getElementById('cadastroUsuario').value.trim();
+      const senha = document.getElementById('cadastroSenha').value;
+
+      if (!usuario || !senha) return alert('Preencha todos os campos');
+
+      const usuarios = getUsuarios();
+      if (usuarios.find(u => u.usuario === usuario)) {
+        return alert('Esse nome de usuário já existe!');
+      }
+
+      usuarios.push({ usuario, senha });
+      salvarUsuarios(usuarios);
+      alert('Cadastro realizado com sucesso!');
+      mostrarLogin();
+    }
+
+    function fazerLogin() {
+      const usuario = document.getElementById('loginUsuario').value;
+      const senha = document.getElementById('loginSenha').value;
+
+      const usuarios = getUsuarios();
+      const valido = usuarios.find(u => u.usuario === usuario && u.senha === senha);
+      if (valido) {
+        localStorage.setItem('logado', usuario);
+        mostrarLoja();
+      } else {
+        alert('Usuário ou senha incorretos');
+      }
+    }
+
+    function mostrarCadastro() {
+      document.getElementById('loginTela').classList.add('hidden');
+      document.getElementById('cadastroTela').classList.remove('hidden');
+    }
+
+    function mostrarLogin() {
+      document.getElementById('cadastroTela').classList.add('hidden');
+      document.getElementById('loginTela').classList.remove('hidden');
+    }
+
+    function mostrarLoja() {
+      document.getElementById('loginTela').classList.add('hidden');
+      document.getElementById('cadastroTela').classList.add('hidden');
+      document.getElementById('lojaTela').classList.remove('hidden');
+      mostrarProdutos();
+      atualizarCarrinho();
+    }
+
+    function logout() {
+      localStorage.removeItem('logado');
+      localStorage.removeItem('carrinho');
+      location.reload();
+    }
+
+    // Loja
+    function salvarDados() {
+      localStorage.setItem('produtos', JSON.stringify(produtos));
+      localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    }
+
+    function mostrarProdutos() {
+      const lista = document.getElementById('lista-produtos');
+      lista.innerHTML = '';
+      produtos.forEach(produto => {
+        const div = document.createElement('div');
+        div.className = 'produto';
+        div.innerHTML = `
+          <strong>${produto.nome}</strong><br>
+          Preço: R$ ${produto.preco.toFixed(2)}<br>
+          Estoque: ${produto.estoque}<br>
+          <button onclick="adicionarAoCarrinho(${produto.id})" ${produto.estoque === 0 ? 'disabled' : ''}>
+            Adicionar ao carrinho
+          </button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    function adicionarAoCarrinho(id) {
+      const produto = produtos.find(p => p.id === id);
+      if (!produto || produto.estoque <= 0) return;
+
+      const item = carrinho.find(p => p.id === id);
+      if (item) {
+        item.quantidade++;
+      } else {
+        carrinho.push({ id: produto.id, nome: produto.nome, preco: produto.preco, quantidade: 1 });
+      }
+      produto.estoque--;
+      salvarDados();
+      atualizarCarrinho();
+      mostrarProdutos();
+    }
+
+    function removerDoCarrinho(id) {
+      const item = carrinho.find(p => p.id === id);
+      if (item) {
+        item.quantidade--;
+        const produto = produtos.find(p => p.id === id);
+        produto.estoque++;
+
+        if (item.quantidade === 0) {
+          const index = carrinho.indexOf(item);
+          carrinho.splice(index, 1);
+        }
+
+        salvarDados();
+        atualizarCarrinho();
+        mostrarProdutos();
+      }
+    }
+
+    function atualizarCarrinho() {
+      const itensCarrinho = document.getElementById('itens-carrinho');
+      const totalElem = document.getElementById('total');
+      itensCarrinho.innerHTML = '';
+      let total = 0;
+
+      carrinho.forEach(item => {
+        const linha = document.createElement('div');
+        linha.className = 'carrinho-item';
+        linha.innerHTML = `
+          ${item.nome} - R$ ${item.preco.toFixed(2)} x ${item.quantidade}
+          <button class="remover" onclick="removerDoCarrinho(${item.id})">Remover</button>
+        `;
+        itensCarrinho.appendChild(linha);
+        total += item.preco * item.quantidade;
+      });
+
+      totalElem.textContent = total.toFixed(2);
+    }
+
+function finalizarCompra() {
+  if (carrinho.length === 0) {
+    alert('Seu carrinho está vazio.');
+    return;
+  }
+
+  // Mostra o formulário de envio
+  const formulario = `
+    <div id="form-envio">
+      <h3>Dados para envio</h3>
+      <input type="text" id="nomeCompleto" placeholder="Nome completo" required>
+      <input type="text" id="endereco" placeholder="Endereço" required>
+      <input type="text" id="cidade" placeholder="Cidade" required>
+      <input type="text" id="estado" placeholder="Estado" required>
+      <input type="text" id="cep" placeholder="CEP" required>
+      <button onclick="confirmarEnvio()">Confirmar Pedido</button>
+    </div>
+  `;
+
+  document.getElementById('carrinho').insertAdjacentHTML('beforeend', formulario);
+  document.querySelector('[onclick="finalizarCompra()"]').disabled = true;
+}
+
+function confirmarEnvio() {
+  const nome = document.getElementById('nomeCompleto').value.trim();
+  const endereco = document.getElementById('endereco').value.trim();
+  const cidade = document.getElementById('cidade').value.trim();
+  const estado = document.getElementById('estado').value.trim();
+  const cep = document.getElementById('cep').value.trim();
+
+  if (!nome || !endereco || !cidade || !estado || !cep) {
+    alert('Preencha todos os campos de envio.');
+    return;
+  }
+
+  alert("Pedido finalizado! Enviado para você");
+
+  // Limpa carrinho
+  carrinho = [];
+  salvarDados();
+  atualizarCarrinho();
+  mostrarProdutos();
+
+  // Remove o formulário
+  document.getElementById('form-envio').remove();
+  document.querySelector('[onclick="finalizarCompra()"]').disabled = false;
+}
+    // Auto-login se já estiver logado
+    if (localStorage.getItem('logado')) {
+      mostrarLoja();
+    }
+
+  </script>
+
+</body>
+</html>
