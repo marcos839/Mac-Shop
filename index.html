@@ -69,6 +69,8 @@
 </head>
 <body>
 
+    <div id="histórico"></div>
+
     <img class="tamanho" src="img/B.png">
 
   <!-- Tela de Login -->
@@ -306,6 +308,45 @@ function confirmarEnvio() {
     if (localStorage.getItem('logado')) {
       mostrarLoja();
     }
+
+    async function carregarHistorico() {
+  const usuario_id = localStorage.getItem('usuario_id');
+  if (!usuario_id) return;
+
+  const resp = await fetch('/api/historico.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario_id })
+  });
+
+  const pedidos = await resp.json();
+
+  const historicoDiv = document.getElementById('historico');
+  historicoDiv.innerHTML = '<h2>Histórico de Compras</h2>';
+
+  if (pedidos.length === 0) {
+    historicoDiv.innerHTML += '<p>Você ainda não fez nenhuma compra.</p>';
+    return;
+  }
+
+  pedidos.forEach(pedido => {
+    const itensHtml = pedido.itens.map(item => `
+      <li>${item.nome} - Qtd: ${item.quantidade} - R$ ${item.preco}</li>
+    `).join('');
+
+    historicoDiv.innerHTML += `
+      <div class="pedido">
+        <p><strong>Data:</strong> ${new Date(pedido.data).toLocaleString()}</p>
+        <p><strong>Nome:</strong> ${pedido.nome}</p>
+        <p><strong>Endereço:</strong> ${pedido.endereco}, ${pedido.cidade} - ${pedido.estado} (${pedido.cep})</p>
+        <ul>${itensHtml}</ul>
+        <hr>
+      </div>
+    `;
+  });
+}
+
+
 
   </script>
 
