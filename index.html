@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <link class="icon" rel="shortcut icon" href="img/B - Copia.ico" type="image/x-icon">
   <meta charset="UTF-8">
   <title>Mac Shop</title>
   <style>
+    .icon {
+      border-radius: 100%;
+    }
     body {
       font-family: Arial, sans-serif;
       background: #ff6e6e;
@@ -65,6 +69,27 @@
     span {
         color: #db0101;
     }
+
+    .calça-Jeans {
+      height: 70px;
+      position: absolute;
+      top: 360px;
+      right: 480px;
+    }
+
+    .airjordan1 {
+      height: 70px;
+      position: absolute;
+      top: 500px;
+      right: 480px;
+    }
+
+    .camisaazul {
+      height: 70px;
+      position: absolute;
+      top: 225px;
+      right: 480px;
+    }
   </style>
 </head>
 <body>
@@ -103,11 +128,16 @@
       <button onclick="finalizarCompra()">Finalizar Compra</button>
       <button class="logout" onclick="logout()">Sair</button>
     </div>
+    <div class="images">
+      <img class="calça-Jeans" src="img/OIP.jpeg">
+      <img class="airjordan1" src="img/OIP (1).jpeg">
+      <img class="camisaazul" src="img/OIP (2).jpeg">
+    </div>
   </div>
 
   <script>
     const produtosDefault = [
-      { id: 1, nome: 'Camisa', preco: 49.90, estoque: 5 },
+      { id: 1, nome: 'Camisa azul', preco: 49.90, estoque: 5 },
       { id: 2, nome: 'Calça Jeans', preco: 89.90, estoque: 3 },
       { id: 3, nome: 'Tênis', preco: 129.90, estoque: 2 },
     ];
